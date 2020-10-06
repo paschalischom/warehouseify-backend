@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -41,4 +42,7 @@ public class Listing {
     double latitude;
 
     String url;
+
+    Map<String, Integer> distancesToPoi;
+    double listingScore;
 }

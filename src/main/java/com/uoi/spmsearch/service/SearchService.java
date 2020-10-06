@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -15,76 +16,73 @@ public class SearchService {
 
     private final UserService userService;
     private final RangeSearchService rangeSearchService;
-    private final FirestoreService firestoreService;
 
-    private List<Listing> filterListings(List<Listing> resultListings, QueryCustomization queryCustomization) {
-        ListIterator<Listing> iterator = resultListings.listIterator();
+    private boolean filterListing(Listing listing, QueryCustomization queryCustomization) {
 
-        while (iterator.hasNext()) {
-            Listing currentListing = iterator.next();
-
-            if (!queryCustomization.getState().equals("") &&
-                    !currentListing.getState().equals(queryCustomization.getState())) {
-                iterator.remove();
-                continue;
+        if (!queryCustomization.getState().equals("") &&
+                !listing.getState().equals(queryCustomization.getState())) {
+            return true;
+        }
+        if (!queryCustomization.getBuildingClass().equals("") &&
+                !listing.getBuildingClass().equals(queryCustomization.getBuildingClass())) {
+            if (!queryCustomization.isBuildingClassCheckbox()) {
+                return true;
             }
-            if (!queryCustomization.getBuildingClass().equals("") &&
-                    !currentListing.getBuildingClass().equals(queryCustomization.getBuildingClass())) {
-                if (!queryCustomization.isBuildingClassCheckbox()) {
-                    iterator.remove();
-                    continue;
-                }
-                else if (queryCustomization.isBuildingClassCheckbox() && !currentListing.getBuildingClass().equals("N/A")) {
-                    iterator.remove();
-                    continue;
-                }
-            }
-            if (!queryCustomization.getPropertyType().equals("") &&
-                    !currentListing.getSubTypes().contains(queryCustomization.getPropertyType())) {
-                if (!queryCustomization.isPropertyTypeCheckbox()) {
-                    iterator.remove();
-                    continue;
-                }
-                else if (queryCustomization.isPropertyTypeCheckbox() && !currentListing.getSubTypes().contains("N/A")) {
-                    iterator.remove();
-                    continue;
-                }
-            }
-            if (!queryCustomization.getStatus().equals("") && !currentListing.getStatus().equals(queryCustomization.getStatus())) {
-                iterator.remove();
-                continue;
-            }
-            if (currentListing.getPriceHigh() == -1) { // The listing has a standard, set price
-                if (queryCustomization.getPriceRangeFrom() > currentListing.getPriceLow() ||
-                        queryCustomization.getPriceRangeTo() < currentListing.getPriceLow()) {
-                    iterator.remove();
-                    continue;
-                }
-            } else if (queryCustomization.getPriceRangeFrom() > currentListing.getPriceLow() ||
-                    queryCustomization.getPriceRangeTo() < currentListing.getPriceHigh()) {
-                iterator.remove();
-                continue;
+            else if (queryCustomization.isBuildingClassCheckbox() && !listing.getBuildingClass().equals("N/A")) {
+                return true;
             }
         }
-        return resultListings;
-    }
-
-    private List<Listing> fetchListings(List<String> listingUIDs) throws ExecutionException, InterruptedException {
-        List<Listing> listings = new ArrayList<>();
-        for (String listingUID: listingUIDs) {
-            listings.add(firestoreService.readListingToObject(listingUID));
+        if (!queryCustomization.getPropertyType().equals("") &&
+                !listing.getSubTypes().contains(queryCustomization.getPropertyType())) {
+            if (!queryCustomization.isPropertyTypeCheckbox()) {
+                return true;
+            }
+            else if (queryCustomization.isPropertyTypeCheckbox() && !listing.getSubTypes().contains("N/A")) {
+                return true;
+            }
         }
-        return listings;
+        if (!queryCustomization.getStatus().equals("") && !listing.getStatus().equals(queryCustomization.getStatus())) {
+            return true;
+        }
+        if (listing.getPriceHigh() == -1) { // The listing doesn't have an upper pricing bound
+            if (queryCustomization.getPriceRangeFrom() > listing.getPriceLow() ||
+                    queryCustomization.getPriceRangeTo() < listing.getPriceLow()) {
+                return true;
+            }
+        } else if (queryCustomization.getPriceRangeFrom() > listing.getPriceLow() ||
+                queryCustomization.getPriceRangeTo() < listing.getPriceHigh()) {
+            return true;
+        }
+        return false;
     }
 
+    private double calculateScore(Listing listing, QueryRankingPreferences queryRankingPreferences) {
+        double score = 0;
+        for (String poiUID: queryRankingPreferences.getPoiBias().keySet()) {
+            score += queryRankingPreferences.getPoiBias().get(poiUID) * listing.getDistancesToPoi().get(poiUID);
+        }
+        return score;
+    }
 
-    public List<Listing> searchWarehousify(String userUID, QueryCustomization queryCustomization) throws ExecutionException, InterruptedException, IOException {
+    public List<Listing> searchWarehousify(String userUID, QueryCustomization queryCustomization, QueryRankingPreferences queryRankingPreferences)
+            throws ExecutionException, InterruptedException, IOException {
         HashMap<String, PointOfInterest> activePointsOfInterest = userService.getUserActivePointsOfInterest(userUID);
-        List<String> resultIds = rangeSearchService.rangeQuerySearch(activePointsOfInterest);
+        List<Listing> resultListings = rangeSearchService.rangeQuerySearch(activePointsOfInterest);
+        ListIterator<Listing> iter = resultListings.listIterator();
 
-        List<Listing> resultListings = fetchListings(resultIds);
+        while (iter.hasNext()) {
+            Listing listing = iter.next();
 
-        return filterListings(resultListings, queryCustomization);
+            if (filterListing(listing, queryCustomization)) {
+                iter.remove();
+            }
+            listing.setListingScore(calculateScore(listing, queryRankingPreferences));
+        }
+
+        Collections.sort(
+                resultListings, Comparator.comparing(Listing::getListingScore)
+        );
+        return resultListings;
         // return resultListings;
     }
 }

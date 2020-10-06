@@ -54,7 +54,6 @@ public class DistanceService {
         for (i = 0; i < destinations.size(); i += 25) {
             DistanceMatrixResponseResult result = googleMapsService.
                     calculateDistance(origin, destinationsCoords.subList(i, Math.min(destinationsCoords.size(), i+ 25)));
-            System.out.println(i);
             for (int j = i; j < Math.min(destinationsCoords.size(), i+ 25); j++) {
                 distances.put(destinations.get(j).getId(), result.getRows().get(0).getElements().get(j%25).getDistance().getValue());
             }

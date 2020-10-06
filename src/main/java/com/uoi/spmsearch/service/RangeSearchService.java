@@ -31,8 +31,8 @@ public class RangeSearchService {
                     .collect(Collectors.toList());
     }
 
-    public List<String> rangeQuerySearch(Map<String, PointOfInterest> origins) throws ExecutionException, InterruptedException, IOException {
-        List<String> results = new ArrayList<>();
+    public List<Listing> rangeQuerySearch(Map<String, PointOfInterest> origins) throws ExecutionException, InterruptedException, IOException {
+        List<Listing> results = new ArrayList<>();
         List<RTreeBase> currentChildren = new ArrayList<>(firestoreService.readRTreeBasesToObject(null));
         while (!currentChildren.isEmpty()) {
             Map<String, Map<String, Integer>> distanceMatrix = new HashMap<>();
@@ -53,7 +53,13 @@ public class RangeSearchService {
                 if (child instanceof RTreeNode) {
                     newChildren.addAll(unpackRTreeNode((RTreeNode) child));
                 } else if (child instanceof RTreeLeaf) {
-                    results.add(child.getId());
+                    Listing result = firestoreService.readListingToObject(child.getId());
+                    Map<String, Integer> resultDistances = new HashMap<>();
+                    for (Map.Entry<String, Map<String, Integer>> origin : distanceMatrix.entrySet()) {
+                        resultDistances.put(origin.getKey(), origin.getValue().get(child.getId()));
+                    }
+                    result.setDistancesToPoi(resultDistances);
+                    results.add(result);
                 }
             }
             currentChildren = newChildren;
