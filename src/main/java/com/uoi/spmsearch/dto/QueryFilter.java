@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class QueryCustomization {
+public class QueryFilter {
 
     String state;
     String buildingClass;

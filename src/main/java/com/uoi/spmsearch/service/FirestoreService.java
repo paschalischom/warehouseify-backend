@@ -3,7 +3,7 @@ package com.uoi.spmsearch.service;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.uoi.spmsearch.dto.*;
-import com.uoi.spmsearch.dto.queryranges.QueryRanges;
+import com.uoi.spmsearch.dto.queryranges.QueryMetadata;
 import com.uoi.spmsearch.errorhandling.ResourceNotFoundException;
 import com.uoi.spmsearch.dto.Listing;
 import com.uoi.spmsearch.model.State;
@@ -45,14 +45,14 @@ public class FirestoreService {
         return states;
     }
 
-    public QueryRanges readQueryRangesToObject() throws ExecutionException, InterruptedException {
-        DocumentReference docRef = db.collection("ui").document("queryRanges");
+    public QueryMetadata readQueryMetadataToObject() throws ExecutionException, InterruptedException {
+        DocumentReference docRef = db.collection("ui").document("queryMetadata");
         ApiFuture<DocumentSnapshot> future = docRef.get();
         DocumentSnapshot document = future.get();
         if (document.exists()) {
-            return document.toObject(QueryRanges.class);
+            return document.toObject(QueryMetadata.class);
         } else {
-            throw new ResourceNotFoundException(QueryRanges.class, "queryRanges");
+            throw new ResourceNotFoundException(QueryMetadata.class, "queryMetadata");
         }
     }
 

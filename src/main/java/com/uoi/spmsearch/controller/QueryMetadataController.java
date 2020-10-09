@@ -1,6 +1,6 @@
 package com.uoi.spmsearch.controller;
 
-import com.uoi.spmsearch.dto.queryranges.QueryRanges;
+import com.uoi.spmsearch.dto.queryranges.QueryMetadata;
 import com.uoi.spmsearch.service.FirestoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,12 +17,12 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Component
-public class QueryRangesController {
+public class QueryMetadataController {
 
     private final FirestoreService firestoreService;
 
-    @GetMapping("/queryranges")
-    public QueryRanges getQueryRanges() throws ExecutionException, InterruptedException {
-        return firestoreService.readQueryRangesToObject();
+    @GetMapping("/querymetadata")
+    public QueryMetadata getQueryMetadata() throws ExecutionException, InterruptedException {
+        return firestoreService.readQueryMetadataToObject();
     }
 }

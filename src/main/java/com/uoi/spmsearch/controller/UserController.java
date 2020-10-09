@@ -1,6 +1,5 @@
 package com.uoi.spmsearch.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.uoi.spmsearch.dto.*;
 import com.uoi.spmsearch.errorhandling.ResourceNotFoundException;
 import com.uoi.spmsearch.service.PointOfInterestService;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -79,8 +77,8 @@ public class UserController {
     }
 
     @PostMapping("/{userUID}/warehouseify")
-    public List<Listing> searchWarehouseify(@PathVariable("userUID") String userUID, @RequestBody QueryCustomization queryCustomization)
+    public List<Listing> searchWarehouseify(@PathVariable("userUID") String userUID, @RequestBody UserQuery userQuery)
             throws ExecutionException, InterruptedException, IOException {
-        return searchService.searchWarehousify(userUID, queryCustomization);
+        return searchService.searchWarehousify(userUID, userQuery);
     }
 }

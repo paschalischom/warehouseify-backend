@@ -1,15 +1,12 @@
-package com.uoi.spmsearch.dto;
+package com.uoi.spmsearch.dto.biases;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class QueryRankingPreferences {
-
-    private Map<String, Double> poiBias;
+public class BaseBias {
+    String all;
 }

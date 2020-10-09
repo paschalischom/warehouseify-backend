@@ -32,6 +32,8 @@ public class Listing {
     String buildingSize;
     String lotSize;
     String buildingClass;
+    double buildingSizeNum;
+    double lotSizeNum;
 
     String spaces;
     String spaceAvailable;
