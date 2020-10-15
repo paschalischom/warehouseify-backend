@@ -1,7 +1,10 @@
 package com.uoi.spmsearch.dto;
 
+import lombok.Builder;
+
 public class AddressRequest {
 
+    @Builder.Default
     String address = null;
 
     public AddressRequest() {}

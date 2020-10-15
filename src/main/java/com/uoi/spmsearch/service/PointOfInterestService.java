@@ -8,7 +8,7 @@ import com.google.cloud.firestore.SetOptions;
 import com.uoi.spmsearch.dto.LocationRequest;
 import com.uoi.spmsearch.dto.PointOfInterest;
 import com.uoi.spmsearch.dto.googlemaps.*;
-import com.uoi.spmsearch.errorhandling.GeocodingGatewayErrorException;
+import com.uoi.spmsearch.errorhandling.GeocodingServiceUnavailableException;
 import com.uoi.spmsearch.errorhandling.ResourceNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +45,10 @@ public class PointOfInterestService {
 
     private boolean poiExists(String userUID, String poiUID) throws ExecutionException, InterruptedException {
         DocumentSnapshot document = getPoISnapshot(userUID, poiUID);
+
+        if (!document.exists()) {
+            throw new ResourceNotFoundException(PointOfInterest.class, poiUID);
+        }
         return document.exists();
     }
 
@@ -96,13 +100,14 @@ public class PointOfInterestService {
                 } else {
                     ex = "Error message not provided.";
                 }
-                throw new GeocodingGatewayErrorException(ex);
+                throw new GeocodingServiceUnavailableException(ex);
         }
 
         return retPoI;
     }
 
-    public PointOfInterest createPoIForFirestore(String userUID, LocationRequest locationRequest) throws ExecutionException, InterruptedException, IOException {
+    public PointOfInterest createPoIForFirestore(String userUID, LocationRequest locationRequest)
+            throws ExecutionException, InterruptedException, IOException, ResourceNotFoundException {
         if (userService.userExists(userUID)) {
             GoogleMapsReverseGeocodingResponseResult response = googleMapsService.reverseGeocode(locationRequest);
             PointOfInterest pointOfInterest = createPoIFromResponse(response);
@@ -118,7 +123,8 @@ public class PointOfInterestService {
         }
     }
 
-    public Map<String, PointOfInterest> addPoIToFirestore(String userUID, PointOfInterest pointOfInterest) throws ExecutionException, InterruptedException {
+    public Map<String, PointOfInterest> addPoIToFirestore(String userUID, PointOfInterest pointOfInterest)
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         if (userService.userExists(userUID)) {
             ApiFuture<DocumentReference> addedDocRef = db.collection("users").document(userUID)
                     .collection("pointsOfInterest").add(pointOfInterest);
@@ -140,13 +146,15 @@ public class PointOfInterestService {
         }
     }
 
-    public void deletePoIFromFirestore(String userUID, String poiUID) throws ExecutionException, InterruptedException {
+    public void deletePoIFromFirestore(String userUID, String poiUID)
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         if (userService.userExists(userUID) && poiExists(userUID, poiUID)) {
             db.collection("users").document(userUID).collection("pointsOfInterest").document(poiUID).delete();
         }
     }
 
-    public void deletePoiBatchFromFirestore(String userUID, String[] poiUIDs) throws ExecutionException, InterruptedException {
+    public void deletePoiBatchFromFirestore(String userUID, String[] poiUIDs)
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         if (userService.userExists(userUID)) {
             for (String poiUID : poiUIDs) {
                 if (poiExists(userUID, poiUID)) {
@@ -156,7 +164,8 @@ public class PointOfInterestService {
         }
     }
 
-    public void editPoIFromFirestore(String userUID, String poiUID, PointOfInterest newPoI) throws ExecutionException, InterruptedException {
+    public void editPoIFromFirestore(String userUID, String poiUID, PointOfInterest newPoI)
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         if (poiExists(userUID, poiUID)) {
             DocumentSnapshot documentSnapshot = getPoISnapshot(userUID, poiUID);
 

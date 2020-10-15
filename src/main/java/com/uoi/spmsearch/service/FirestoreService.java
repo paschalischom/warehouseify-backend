@@ -6,7 +6,7 @@ import com.uoi.spmsearch.dto.*;
 import com.uoi.spmsearch.dto.queryranges.QueryMetadata;
 import com.uoi.spmsearch.errorhandling.ResourceNotFoundException;
 import com.uoi.spmsearch.dto.Listing;
-import com.uoi.spmsearch.model.State;
+import com.uoi.spmsearch.dto.State;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -21,18 +21,6 @@ public class FirestoreService {
 
     private final Firestore db;
 
-    public HashMap<String, Listing> readListingsToObjectList(String state) throws ExecutionException, InterruptedException {
-        ApiFuture<QuerySnapshot> future = db.collection("states").document(state).collection("listings").get();
-        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-        HashMap<String, Listing> listings = new HashMap<>();
-        if (!documents.isEmpty()) {
-            for (DocumentSnapshot snapshot: documents) {
-                listings.put(snapshot.getId(), snapshot.toObject(Listing.class));
-            }
-        }
-        return listings;
-    }
-
     public List<State> readStatesToObjectList() throws ExecutionException, InterruptedException {
         ApiFuture<QuerySnapshot> future = db.collection("states").get();
         List<QueryDocumentSnapshot> documents = future.get().getDocuments();
@@ -41,6 +29,8 @@ public class FirestoreService {
             for (DocumentSnapshot snapshot: documents) {
                 states.add(snapshot.toObject(State.class));
             }
+        } else {
+            throw new ResourceNotFoundException(State.class, "states");
         }
         return states;
     }
@@ -82,26 +72,6 @@ public class FirestoreService {
             }
         }
         return childBases;
-    }
-
-    public Set<Listing> readListingsToObjectList(List<String> listingUIDs) throws ExecutionException, InterruptedException {
-        CollectionReference listingsRef = db.collection("listings");
-
-        Set<Listing> listings = new HashSet<>();
-        // Does not work due to https://github.com/googleapis/nodejs-firestore/issues/990
-        // Plus, I think requesting specific documents by id is faster than querying
-        /*
-        for (int i=0; i < listingUIDs.size(); i += 10) {
-            Query query = listingsRef.whereIn(FieldPath.documentId(), listingUIDs.subList(i, Math.min(i+10, listingUIDs.size())));
-            ApiFuture<QuerySnapshot> future = query.get();
-            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-            for (DocumentSnapshot document: documents) {
-                listings.add(document.toObject(Listing.class));
-            }
-        }
-        */
-
-        return listings;
     }
 
     public Listing readListingToObject(String listingUID) throws ExecutionException, InterruptedException {

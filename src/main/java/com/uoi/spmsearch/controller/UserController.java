@@ -41,44 +41,44 @@ public class UserController {
 
     @GetMapping("/{userUID}/poi/list")
     public HashMap<String, PointOfInterest> getUserPointsOfInterest(@PathVariable("userUID") String userUID)
-            throws ExecutionException, InterruptedException {
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         return userService.getUserPointsOfInterest(userUID);
     }
 
     @PostMapping("/{userUID}/poi/createandadd")
     public Map<String, PointOfInterest> createAndAddPointOfInterest(@PathVariable("userUID") String userUID, @RequestBody LocationRequest locationRequest)
-            throws InterruptedException, ExecutionException, IOException {
+            throws InterruptedException, ExecutionException, IOException, ResourceNotFoundException {
         PointOfInterest pointOfInterest = pointOfInterestService.createPoIForFirestore(userUID, locationRequest);
         return pointOfInterestService.addPoIToFirestore(userUID, pointOfInterest);
     }
 
     @PostMapping("/{userUID}/poi/add")
     public Map<String, PointOfInterest> addPointOfInterest(@PathVariable("userUID") String userUID, @RequestBody PointOfInterest pointOfInterest)
-            throws InterruptedException, ExecutionException {
+            throws InterruptedException, ExecutionException, ResourceNotFoundException {
         return pointOfInterestService.addPoIToFirestore(userUID, pointOfInterest);
     }
 
     @GetMapping("/{userUID}/poi/{poiUID}/delete")
     public void deletePointOfInterest(@PathVariable("userUID") String userUID, @PathVariable("poiUID") String poiUID)
-            throws ExecutionException, InterruptedException {
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         pointOfInterestService.deletePoIFromFirestore(userUID, poiUID);
     }
 
     @PostMapping("/{userUID}/poi/batch/delete")
     public void deletePointOfInterestBatch(@PathVariable("userUID") String userUID, @RequestBody String[] poiUIDs)
-            throws ExecutionException, InterruptedException {
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         pointOfInterestService.deletePoiBatchFromFirestore(userUID, poiUIDs);
     }
 
     @PostMapping("/{userUID}/poi/{poiUID}/edit")
     public void editPointOfInterest(@PathVariable("userUID") String userUID, @PathVariable("poiUID") String poiUID, @RequestBody PointOfInterest newPoI)
-            throws ExecutionException, InterruptedException {
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         pointOfInterestService.editPoIFromFirestore(userUID, poiUID, newPoI);
     }
 
     @PostMapping("/{userUID}/warehouseify")
     public List<Listing> searchWarehouseify(@PathVariable("userUID") String userUID, @RequestBody UserQuery userQuery)
-            throws ExecutionException, InterruptedException, IOException {
+            throws ExecutionException, InterruptedException, IOException, ResourceNotFoundException {
         return searchService.searchWarehousify(userUID, userQuery);
     }
 }

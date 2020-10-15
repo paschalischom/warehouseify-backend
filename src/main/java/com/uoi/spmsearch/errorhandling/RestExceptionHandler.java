@@ -21,9 +21,9 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(apiError);
     }
 
-    @ExceptionHandler(GeocodingGatewayErrorException.class)
-    protected ResponseEntity<Object> handleGeocodingError(GeocodingGatewayErrorException ex) {
-        ApiError apiError = new ApiError(HttpStatus.BAD_GATEWAY, ex);
+    @ExceptionHandler(GeocodingServiceUnavailableException.class)
+    protected ResponseEntity<Object> handleGeocodingError(GeocodingServiceUnavailableException ex) {
+        ApiError apiError = new ApiError(HttpStatus.SERVICE_UNAVAILABLE, ex);
         return buildResponseEntity(apiError);
     }
 

@@ -44,12 +44,17 @@ public class UserService {
         ApiFuture<WriteResult> writeResult = db.collection("users").document(userUID).delete();
     }
 
-    public boolean userExists(String userUID) throws ExecutionException, InterruptedException {
+    public boolean userExists(String userUID) throws ExecutionException, InterruptedException, ResourceNotFoundException {
         DocumentSnapshot document = getUserSnapshot(userUID);
+
+        if (!document.exists()) {
+            throw new ResourceNotFoundException(User.class, userUID);
+        }
         return document.exists();
     }
 
-    private HashMap<String, PointOfInterest> getPoIMapFromFuture(ApiFuture<QuerySnapshot> future) throws ExecutionException, InterruptedException {
+    private HashMap<String, PointOfInterest> getPoIMapFromFuture(ApiFuture<QuerySnapshot> future)
+            throws ExecutionException, InterruptedException {
         HashMap<String, PointOfInterest> pointsOfInterest = new HashMap<>();
 
         List<QueryDocumentSnapshot> documents = future.get().getDocuments();
@@ -61,7 +66,8 @@ public class UserService {
         return pointsOfInterest;
     }
 
-    public HashMap<String, PointOfInterest> getUserPointsOfInterest(String userUID) throws ExecutionException, InterruptedException {
+    public HashMap<String, PointOfInterest> getUserPointsOfInterest(String userUID)
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         if (userExists(userUID)) {
             ApiFuture<QuerySnapshot> future = db.collection("users").document(userUID).collection("pointsOfInterest").get();
             return getPoIMapFromFuture(future);
@@ -70,7 +76,8 @@ public class UserService {
         }
     }
 
-    public HashMap<String, PointOfInterest> getUserActivePointsOfInterest(String userUID) throws ExecutionException, InterruptedException {
+    public HashMap<String, PointOfInterest> getUserActivePointsOfInterest(String userUID)
+            throws ExecutionException, InterruptedException, ResourceNotFoundException {
         if (userExists(userUID)) {
             CollectionReference pointsOfInterestCollection = db.collection("users").document(userUID).collection("pointsOfInterest");
             Query query = pointsOfInterestCollection.whereEqualTo("status", "Active");

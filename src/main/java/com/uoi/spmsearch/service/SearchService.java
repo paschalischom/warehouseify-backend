@@ -1,7 +1,6 @@
 package com.uoi.spmsearch.service;
 
 import com.uoi.spmsearch.dto.*;
-import com.uoi.spmsearch.dto.googlemaps.Result;
 import com.uoi.spmsearch.model.ResultMetadata;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

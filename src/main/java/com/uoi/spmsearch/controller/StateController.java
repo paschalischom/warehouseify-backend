@@ -1,6 +1,6 @@
 package com.uoi.spmsearch.controller;
 
-import com.uoi.spmsearch.model.State;
+import com.uoi.spmsearch.dto.State;
 import com.uoi.spmsearch.service.FirestoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

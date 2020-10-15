@@ -47,7 +47,7 @@ public class GoogleMapsService {
         String encodedAddress = URLEncoder.encode(addressRequest.getAddress(), StandardCharsets.UTF_8);
         String urlString = "https://maps.googleapis.com/maps/api/geocode/json?" +
                 "language=en&region=us&address=" + encodedAddress +
-                "&key=<GEOCODING_API_KEY>";
+                "&key=AIzaSyC7fQ08kF7i3CoHjHy63fR9edL2E3p_Q68";
         String response = executeRequest(urlString);
         return new ObjectMapper().readValue(response, GoogleMapsForwardGeocodingResponseResult.class);
     }
@@ -60,7 +60,7 @@ public class GoogleMapsService {
         String encodedLatLng = locationRequest.encodeReverseGeocodingUrl();
         String urlString = "https://maps.googleapis.com/maps/api/geocode/json?" +
                 "language=en&result_type=street_address&latlng=" + encodedLatLng +
-                "&key=<GEOCODING_API_KEY>";
+                "&key=AIzaSyC7fQ08kF7i3CoHjHy63fR9edL2E3p_Q68";
         String response = executeRequest(urlString);
         return new ObjectMapper().readValue(response, GoogleMapsReverseGeocodingResponseResult.class);
     }
@@ -72,7 +72,7 @@ public class GoogleMapsService {
             urlString.append(destination.getLatitude()).append(",").append(destination.getLongitude()).append("|");
         }
         urlString.setLength(urlString.length() - 1);
-        urlString.append("&key=<DISTANCE_MATRIX_API_KEY>");
+        urlString.append("&key=AIzaSyAP688BTtHY3JWJa806dq5xqcAQ3j17qYg");
         //System.out.printf("Url: %s\n", urlString.toString());
         String response = executeRequest(urlString.toString());
         //System.out.println(response);
