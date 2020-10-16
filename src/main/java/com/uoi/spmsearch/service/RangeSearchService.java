@@ -1,6 +1,7 @@
 package com.uoi.spmsearch.service;
 
 import com.uoi.spmsearch.dto.*;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,16 +11,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor(onConstructor = @__(@Autowired))
 public class RangeSearchService {
 
     private final FirestoreService firestoreService;
     private final DistanceService distanceService;
-
-    @Autowired
-    public RangeSearchService(FirestoreService firestoreService, DistanceService distanceService) {
-        this.firestoreService = firestoreService;
-        this.distanceService = distanceService;
-    }
 
     private List<RTreeBase> unpackRTreeNode(RTreeNode rTreeNode) throws ExecutionException, InterruptedException {
         return firestoreService.readRTreeBasesToObject(rTreeNode);
@@ -31,7 +27,8 @@ public class RangeSearchService {
                     .collect(Collectors.toList());
     }
 
-    public List<Listing> rangeQuerySearch(Map<String, PointOfInterest> origins) throws ExecutionException, InterruptedException, IOException {
+    public List<Listing> rangeQuerySearch(Map<String, PointOfInterest> origins)
+            throws ExecutionException, InterruptedException, IOException {
         List<Listing> results = new ArrayList<>();
         List<RTreeBase> currentChildren = new ArrayList<>(firestoreService.readRTreeBasesToObject(null));
         while (!currentChildren.isEmpty()) {
