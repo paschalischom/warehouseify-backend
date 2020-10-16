@@ -2,7 +2,9 @@ package com.uoi.spmsearch.service;
 
 import com.uoi.spmsearch.dto.*;
 import com.uoi.spmsearch.dto.distancematrix.DistanceMatrixResponseResult;
+import com.uoi.spmsearch.dto.distancematrix.Element;
 import com.uoi.spmsearch.errorhandling.ExternalServiceUnavailableException;
+import com.uoi.spmsearch.model.Distance;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -45,13 +49,14 @@ public class DistanceService {
         return new GeoPoint(destinationLat, destinationLng);
     }
 
-    public Map<String, Integer> calculateGoogleDistance(PointOfInterest origin, List<RTreeBase> destinations)
+    public Map<String, Distance> calculateGoogleDistance(PointOfInterest origin, List<RTreeBase> destinations)
             throws InterruptedException, ExecutionException, IOException, ExternalServiceUnavailableException {
         List<GeoPoint> destinationsCoords = new ArrayList<>();
         for (RTreeBase destination: destinations) {
             destinationsCoords.add(getClosestMBRPoint(origin, destination));
         }
-        Map<String, Integer> distances = new HashMap<>();
+        List<RTreeBase> fallbackDestinationsList = new ArrayList<>();
+        Map<String, Distance> distances = new HashMap<>();
         int i;
         for (i = 0; i < destinations.size(); i += 25) {
             DistanceMatrixResponseResult result = googleMapsService.
@@ -59,21 +64,36 @@ public class DistanceService {
             if (!result.getStatus().equals("OK")) {
                 throw new ExternalServiceUnavailableException(result.getErrorMessage());
             }
-            for (int j = i; j < Math.min(destinationsCoords.size(), i+ 25); j++) {
-                distances.put(destinations.get(j).getId(), result.getRows().get(0).getElements().get(j%25).getDistance().getValue());
+            for (int j = i; j < Math.min(destinationsCoords.size(), i + 25); j++) {
+                Element element = result.getRows().get(0).getElements().get(j%25);
+                if (element.getStatus().equals("OK")) {
+                    // Use Google driving distance
+                    Distance distanceObj = new Distance(element.getDistance().getValue(), "EXACT");
+                    distances.put(destinations.get(j).getId(), distanceObj);
+                } else {
+                    // Use estimation based on Haversine distance (fallback case)
+                    fallbackDestinationsList.add(destinations.get(j));
+                }
             }
+        }
+        System.out.println("Fallback list size: " + fallbackDestinationsList.size());
+        if (!fallbackDestinationsList.isEmpty()) {
+            Map<String, Distance> fallbackDistances = calculateHaversineDistance(origin, fallbackDestinationsList);
+            fallbackDistances.forEach(
+                    (key, value) -> distances.merge(key, value, (v1, v2) -> v1)
+            );
         }
 
         return distances;
     }
 
-    public Map<String, Integer> calculateHaversineDistance(PointOfInterest origin, List<RTreeBase> destinations) {
+    public Map<String, Distance> calculateHaversineDistance(PointOfInterest origin, List<RTreeBase> destinations) {
         final int R = 6371; // Earth's radius
 
         double latOrigin = origin.getLat();
         double lngOrigin = origin.getLng();
 
-        Map<String, Integer> distances = new HashMap<>();
+        Map<String, Distance> distances = new HashMap<>();
         for (RTreeBase destination: destinations) {
             GeoPoint closestMBRPoint = getClosestMBRPoint(origin, destination);
 
@@ -88,7 +108,8 @@ public class DistanceService {
 
             distance = Math.pow(distance, 2);
 
-            distances.put(destination.getId(), (int) Math.sqrt(distance));
+            Distance distanceObj = new Distance((int) Math.sqrt(distance), "ESTIMATE");
+            distances.put(destination.getId(), distanceObj);
         }
 
         return distances;

@@ -53,7 +53,6 @@ public class PointOfInterestService {
     }
 
     public PointOfInterest createPoIFromResponse(GoogleMapsResponseResult response) {
-        System.out.println(response.getStatus());
         PointOfInterest retPoI = new PointOfInterest();
 
         long millis = System.currentTimeMillis();

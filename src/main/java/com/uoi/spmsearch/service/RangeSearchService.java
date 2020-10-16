@@ -1,6 +1,7 @@
 package com.uoi.spmsearch.service;
 
 import com.uoi.spmsearch.dto.*;
+import com.uoi.spmsearch.model.Distance;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,14 +34,16 @@ public class RangeSearchService {
         return children;
     }
 
-    private List<Listing> unpackRTreeLeafs(List<RTreeBase> leafs, Map<String, Map<String, Integer>> distanceMatrix) throws ExecutionException, InterruptedException {
+    private List<Listing> unpackRTreeLeafs(List<RTreeBase> leafs, Map<String, Map<String, Distance>> distanceMatrix) throws ExecutionException, InterruptedException {
         List<Listing> listings = new ArrayList<>();
         for (RTreeBase leaf: leafs) {
             Listing result = fetchLeafData((RTreeLeaf) leaf);
-            Map<String, Integer> resultDistances = new HashMap<>();
+            Map<String, DistanceDTO> resultDistances = new HashMap<>();
             // Assign to poi each distance
-            for (Map.Entry<String, Map<String, Integer>> origin : distanceMatrix.entrySet()) {
-                resultDistances.put(origin.getKey(), origin.getValue().get(leaf.getId()));
+            for (Map.Entry<String, Map<String, Distance>> origin : distanceMatrix.entrySet()) {
+                DistanceDTO distanceDTO = new DistanceDTO(origin.getValue().get(leaf.getId()).getDistance(), origin.getValue().get(leaf.getId()).getAccuracy());
+                resultDistances.put(origin.getKey(), distanceDTO);
+
             }
             result.setDistancesToPoi(resultDistances);
             listings.add(result);
@@ -48,9 +51,9 @@ public class RangeSearchService {
         return listings;
     }
 
-    private List<RTreeBase> filterOutNodes(PointOfInterest origin, List<RTreeBase> nodes, Map<String, Integer> distanceMatrix) {
+    private List<RTreeBase> filterOutNodes(PointOfInterest origin, List<RTreeBase> nodes, Map<String, Distance> distanceMatrix) {
         return nodes.stream()
-                    .filter(node -> distanceMatrix.get(node.getId()) <= origin.getRadius())
+                    .filter(node -> distanceMatrix.get(node.getId()).getDistance() <= origin.getRadius())
                     .collect(Collectors.toList());
     }
 
@@ -59,7 +62,7 @@ public class RangeSearchService {
         List<Listing> results = new ArrayList<>();
         List<RTreeBase> currentChildren = new ArrayList<>(firestoreService.readRTreeBasesToObject(null));
         while (!currentChildren.isEmpty()) {
-            Map<String, Map<String, Integer>> distanceMatrix = new HashMap<>();
+            Map<String, Map<String, Distance>> distanceMatrix = new HashMap<>();
             for (String originID: origins.keySet()) {
                 // While a 'hacky' solution, in our case it is fail-safe due to the structure of the R-Tree.
                 // Either all currentChildren will be nodes or all will be leafs.
@@ -74,7 +77,9 @@ public class RangeSearchService {
 
             if (!currentChildren.isEmpty()) {
                 if (currentChildren.get(0) instanceof RTreeNode) {
+                    System.out.println("Pre: " + currentChildren.size());
                     currentChildren = unpackRTreeNodes(currentChildren);
+                    System.out.println("Post: " + currentChildren.size());
                 } else if (currentChildren.get(0) instanceof RTreeLeaf) {
                     results = unpackRTreeLeafs(currentChildren, distanceMatrix);
                     break; // Stop parsing the tree since we reached rock-bottom

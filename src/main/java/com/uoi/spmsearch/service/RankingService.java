@@ -14,13 +14,13 @@ public class RankingService {
         if (queryRanking.getDistanceBias().getAll() != null) {
             double universalBias = Double.parseDouble(queryRanking.getDistanceBias().getAll());
             for (String poiUID : listing.getDistancesToPoi().keySet()) {
-                score += universalBias * ((double)listing.getDistancesToPoi().get(poiUID) / (double)resultMetadata.getMaxDistance());
+                score += universalBias * ((double)listing.getDistancesToPoi().get(poiUID).getDistance() / (double)resultMetadata.getMaxDistance());
             }
         }
         else {
             for (String poiUID : listing.getDistancesToPoi().keySet()) {
                 score += Double.parseDouble(queryRanking.getDistanceBias().getDistanceBiasMap().get(poiUID)) *
-                        ((double)listing.getDistancesToPoi().get(poiUID) / (double)resultMetadata.getMaxDistance());
+                        ((double)listing.getDistancesToPoi().get(poiUID).getDistance() / (double)resultMetadata.getMaxDistance());
             }
         }
         // Price

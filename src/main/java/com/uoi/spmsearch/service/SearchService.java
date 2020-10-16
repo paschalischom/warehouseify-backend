@@ -28,9 +28,9 @@ public class SearchService {
         double maxLotSize = 0;
 
         for (Listing listing : resultListings) {
-            for (Integer listingDistanceToPoi : listing.getDistancesToPoi().values()) {
-                if (listingDistanceToPoi > maxDistance) {
-                    maxDistance = listingDistanceToPoi;
+            for (DistanceDTO listingDistanceToPoi : listing.getDistancesToPoi().values()) {
+                if (listingDistanceToPoi.getDistance() > maxDistance) {
+                    maxDistance = listingDistanceToPoi.getDistance();
                 }
             }
             if (listing.getStatus().equals("For Sale")) {

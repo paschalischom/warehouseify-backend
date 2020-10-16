@@ -45,6 +45,6 @@ public class Listing {
 
     String url;
 
-    Map<String, Integer> distancesToPoi;
+    Map<String, DistanceDTO> distancesToPoi;
     double listingScore;
 }
