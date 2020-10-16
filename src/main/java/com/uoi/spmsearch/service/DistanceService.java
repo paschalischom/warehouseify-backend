@@ -56,7 +56,7 @@ public class DistanceService {
         for (i = 0; i < destinations.size(); i += 25) {
             DistanceMatrixResponseResult result = googleMapsService.
                     calculateDistance(origin, destinationsCoords.subList(i, Math.min(destinationsCoords.size(), i+ 25)));
-            if (result.getStatus().equals("OK")) {
+            if (!result.getStatus().equals("OK")) {
                 throw new ExternalServiceUnavailableException(result.getErrorMessage());
             }
             for (int j = i; j < Math.min(destinationsCoords.size(), i+ 25); j++) {
