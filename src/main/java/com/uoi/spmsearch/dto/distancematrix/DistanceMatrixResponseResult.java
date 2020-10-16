@@ -20,4 +20,7 @@ public class DistanceMatrixResponseResult {
     @JsonProperty("destination_addresses")
     List<String> destinationAddresses;
     List<Row> rows;
+    @Builder.Default
+    @JsonProperty("error_message")
+    String errorMessage = null;
 }

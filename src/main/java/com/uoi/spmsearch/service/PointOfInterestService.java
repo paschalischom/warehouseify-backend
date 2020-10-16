@@ -8,7 +8,7 @@ import com.google.cloud.firestore.SetOptions;
 import com.uoi.spmsearch.dto.LocationRequest;
 import com.uoi.spmsearch.dto.PointOfInterest;
 import com.uoi.spmsearch.dto.googlemaps.*;
-import com.uoi.spmsearch.errorhandling.GeocodingServiceUnavailableException;
+import com.uoi.spmsearch.errorhandling.ExternalServiceUnavailableException;
 import com.uoi.spmsearch.errorhandling.ResourceNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,7 +100,7 @@ public class PointOfInterestService {
                 } else {
                     ex = "Error message not provided.";
                 }
-                throw new GeocodingServiceUnavailableException(ex);
+                throw new ExternalServiceUnavailableException(ex);
         }
 
         return retPoI;

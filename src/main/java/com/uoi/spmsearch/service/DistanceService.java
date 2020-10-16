@@ -2,6 +2,7 @@ package com.uoi.spmsearch.service;
 
 import com.uoi.spmsearch.dto.*;
 import com.uoi.spmsearch.dto.distancematrix.DistanceMatrixResponseResult;
+import com.uoi.spmsearch.errorhandling.ExternalServiceUnavailableException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,7 +45,8 @@ public class DistanceService {
         return new GeoPoint(destinationLat, destinationLng);
     }
 
-    public Map<String, Integer> calculateGoogleDistance(PointOfInterest origin, List<RTreeBase> destinations) throws InterruptedException, ExecutionException, IOException {
+    public Map<String, Integer> calculateGoogleDistance(PointOfInterest origin, List<RTreeBase> destinations)
+            throws InterruptedException, ExecutionException, IOException, ExternalServiceUnavailableException {
         List<GeoPoint> destinationsCoords = new ArrayList<>();
         for (RTreeBase destination: destinations) {
             destinationsCoords.add(getClosestMBRPoint(origin, destination));
@@ -54,6 +56,9 @@ public class DistanceService {
         for (i = 0; i < destinations.size(); i += 25) {
             DistanceMatrixResponseResult result = googleMapsService.
                     calculateDistance(origin, destinationsCoords.subList(i, Math.min(destinationsCoords.size(), i+ 25)));
+            if (result.getStatus().equals("OK")) {
+                throw new ExternalServiceUnavailableException(result.getErrorMessage());
+            }
             for (int j = i; j < Math.min(destinationsCoords.size(), i+ 25); j++) {
                 distances.put(destinations.get(j).getId(), result.getRows().get(0).getElements().get(j%25).getDistance().getValue());
             }
