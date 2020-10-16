@@ -55,6 +55,9 @@ public class SearchService {
     public List<Listing> searchWarehousify(String userUID, UserQuery userQuery)
             throws ExecutionException, InterruptedException, IOException {
         HashMap<String, PointOfInterest> activePointsOfInterest = userService.getUserActivePointsOfInterest(userUID);
+        if (activePointsOfInterest.isEmpty()) {
+            return new ArrayList<>();
+        }
         List<Listing> resultListings = rangeSearchService.rangeQuerySearch(activePointsOfInterest);
 
         List<Listing> filteredResults = resultListings.stream()

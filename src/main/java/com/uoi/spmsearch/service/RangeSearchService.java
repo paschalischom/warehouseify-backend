@@ -17,8 +17,35 @@ public class RangeSearchService {
     private final FirestoreService firestoreService;
     private final DistanceService distanceService;
 
-    private List<RTreeBase> unpackRTreeNode(RTreeNode rTreeNode) throws ExecutionException, InterruptedException {
+    private List<RTreeBase> fetchNodeChildren(RTreeNode rTreeNode) throws ExecutionException, InterruptedException {
         return firestoreService.readRTreeBasesToObject(rTreeNode);
+    }
+
+    private Listing fetchLeafData(RTreeLeaf rTreeLeaf) throws ExecutionException, InterruptedException {
+        return firestoreService.readListingToObject(rTreeLeaf.getId());
+    }
+
+    private List<RTreeBase> unpackRTreeNodes(List<RTreeBase> nodes) throws ExecutionException, InterruptedException {
+        List<RTreeBase> children = new ArrayList<>();
+        for (RTreeBase node: nodes) {
+            children.addAll(fetchNodeChildren((RTreeNode) node));
+        }
+        return children;
+    }
+
+    private List<Listing> unpackRTreeLeafs(List<RTreeBase> leafs, Map<String, Map<String, Integer>> distanceMatrix) throws ExecutionException, InterruptedException {
+        List<Listing> listings = new ArrayList<>();
+        for (RTreeBase leaf: leafs) {
+            Listing result = fetchLeafData((RTreeLeaf) leaf);
+            Map<String, Integer> resultDistances = new HashMap<>();
+            // Assign to poi each distance
+            for (Map.Entry<String, Map<String, Integer>> origin : distanceMatrix.entrySet()) {
+                resultDistances.put(origin.getKey(), origin.getValue().get(leaf.getId()));
+            }
+            result.setDistancesToPoi(resultDistances);
+            listings.add(result);
+        }
+        return listings;
     }
 
     private List<RTreeBase> filterOutNodes(PointOfInterest origin, List<RTreeBase> nodes, Map<String, Integer> distanceMatrix) {
@@ -45,21 +72,14 @@ public class RangeSearchService {
                 currentChildren = filterOutNodes(origins.get(originID), currentChildren, distanceMatrix.get(originID));
             }
 
-            List<RTreeBase> newChildren = new ArrayList<>();
-            for (RTreeBase child: currentChildren) {
-                if (child instanceof RTreeNode) {
-                    newChildren.addAll(unpackRTreeNode((RTreeNode) child));
-                } else if (child instanceof RTreeLeaf) {
-                    Listing result = firestoreService.readListingToObject(child.getId());
-                    Map<String, Integer> resultDistances = new HashMap<>();
-                    for (Map.Entry<String, Map<String, Integer>> origin : distanceMatrix.entrySet()) {
-                        resultDistances.put(origin.getKey(), origin.getValue().get(child.getId()));
-                    }
-                    result.setDistancesToPoi(resultDistances);
-                    results.add(result);
+            if (!currentChildren.isEmpty()) {
+                if (currentChildren.get(0) instanceof RTreeNode) {
+                    currentChildren = unpackRTreeNodes(currentChildren);
+                } else if (currentChildren.get(0) instanceof RTreeLeaf) {
+                    results = unpackRTreeLeafs(currentChildren, distanceMatrix);
+                    break; // Stop parsing the tree since we reached rock-bottom
                 }
             }
-            currentChildren = newChildren;
         }
 
         return results;
