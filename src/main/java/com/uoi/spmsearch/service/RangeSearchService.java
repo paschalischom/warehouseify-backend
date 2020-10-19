@@ -77,9 +77,7 @@ public class RangeSearchService {
 
             if (!currentChildren.isEmpty()) {
                 if (currentChildren.get(0) instanceof RTreeNode) {
-                    System.out.println("Pre: " + currentChildren.size());
                     currentChildren = unpackRTreeNodes(currentChildren);
-                    System.out.println("Post: " + currentChildren.size());
                 } else if (currentChildren.get(0) instanceof RTreeLeaf) {
                     results = unpackRTreeLeafs(currentChildren, distanceMatrix);
                     break; // Stop parsing the tree since we reached rock-bottom

@@ -65,7 +65,7 @@ public class UserController {
     }
 
     @PostMapping("/{userUID}/poi/batch/delete")
-    public void deletePointOfInterestBatch(@PathVariable("userUID") String userUID, @RequestBody String[] poiUIDs)
+    public void deletePointOfInterestBatch(@PathVariable("userUID") String userUID, @RequestBody List<String> poiUIDs)
             throws ExecutionException, InterruptedException, ResourceNotFoundException {
         pointOfInterestService.deletePoiBatchFromFirestore(userUID, poiUIDs);
     }

@@ -152,7 +152,7 @@ public class PointOfInterestService {
         }
     }
 
-    public void deletePoiBatchFromFirestore(String userUID, String[] poiUIDs)
+    public void deletePoiBatchFromFirestore(String userUID, List<String> poiUIDs)
             throws ExecutionException, InterruptedException, ResourceNotFoundException {
         if (userService.userExists(userUID)) {
             for (String poiUID : poiUIDs) {

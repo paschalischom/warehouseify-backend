@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -59,8 +57,8 @@ public class DistanceService {
         Map<String, Distance> distances = new HashMap<>();
         int i;
         for (i = 0; i < destinations.size(); i += 25) {
-            DistanceMatrixResponseResult result = googleMapsService.
-                    calculateDistance(origin, destinationsCoords.subList(i, Math.min(destinationsCoords.size(), i+ 25)));
+            DistanceMatrixResponseResult result =
+                    googleMapsService.calculateDistance(origin, destinationsCoords.subList(i, Math.min(destinationsCoords.size(), i+ 25)));
             if (!result.getStatus().equals("OK")) {
                 throw new ExternalServiceUnavailableException(result.getErrorMessage());
             }
@@ -76,7 +74,6 @@ public class DistanceService {
                 }
             }
         }
-        System.out.println("Fallback list size: " + fallbackDestinationsList.size());
         if (!fallbackDestinationsList.isEmpty()) {
             Map<String, Distance> fallbackDistances = calculateHaversineDistance(origin, fallbackDestinationsList);
             fallbackDistances.forEach(

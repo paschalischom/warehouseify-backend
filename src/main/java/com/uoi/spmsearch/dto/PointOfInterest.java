@@ -1,6 +1,5 @@
 package com.uoi.spmsearch.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.uoi.spmsearch.dto.googlemaps.Viewport;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

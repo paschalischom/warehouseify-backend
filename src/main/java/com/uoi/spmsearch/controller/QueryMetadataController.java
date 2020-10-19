@@ -5,6 +5,7 @@ import com.uoi.spmsearch.service.FirestoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,7 @@ public class QueryMetadataController {
     private final FirestoreService firestoreService;
 
     @GetMapping("/querymetadata")
+    @Cacheable("querymetadata")
     public QueryMetadata getQueryMetadata() throws ExecutionException, InterruptedException {
         return firestoreService.readQueryMetadataToObject();
     }
